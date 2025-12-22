@@ -4,7 +4,7 @@ from setting.config import get_settings
 
 router = APIRouter(
     tags=["infor"],
-    prefix=["/api"]
+    prefix="/api"
 )
 
 @router.get("/")

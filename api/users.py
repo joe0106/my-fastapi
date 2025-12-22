@@ -6,7 +6,7 @@ from database.fake_db import get_db
 
 router = APIRouter(
     tags=["users"],
-    prefix=["/api"]
+    prefix="/api"
 )
 fake_db = get_db()
 
