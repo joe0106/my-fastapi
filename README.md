@@ -6,6 +6,10 @@
 
 ```bash
 uv run python3 main.py
+# dbtype
+uv run python3 main.py --db postgress
+# run mode
+uv run python3 main.py --sync
 ```
 
 # Container
@@ -22,4 +26,10 @@ docker run --name fastapi_postgres_dev -e POSTGRES_USER=fastapi_tutorial -e POST
 
 ```bash
 docker run --name fastapi_mysql_dev -e MYSQL_USER=fastapi_tutorial -e MYSQL_ROOT_PASSWORD=fastapi_tutorial_password -e MYSQL_DATABASE=fastapi_tutorial -p 3306:3306 --volume fastapi_tutorial_mysql_dev:/var/lib/mysql -d mysql:8.1
+```
+
+# Database Operation Run Mode
+
+```bash
+uv run python3 main.py --sync
 ```
