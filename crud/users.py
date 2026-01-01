@@ -1,38 +1,89 @@
 from sqlalchemy.orm import Session 
 from sqlalchemy import select , update , delete
+from sqlalchemy.ext.asyncio import AsyncSession
 import hashlib
 
-
-from database.generic import get_db
+from database.generic import crud_class_decorator, db_session_decorator, get_db
 from models.users import User as UserModel 
 from schemas import users as UserSchema
 
-db_session:Session = get_db()
+@crud_class_decorator
+class UserCrudManager:
 
-def get_user_id_by_email(email: str):
-    stmt = select(UserModel.id).where(UserModel.email == email)
-    user_id = db_session.execute(stmt).first()
-    if user_id:
-        return user_id
-    return None
+    #@db_session_decorator
+    async def get_users(self, keyword:str = None, last:int = 0, limit:int = 50, db_session: AsyncSession = None):
+        stmt = select(UserModel.name, UserModel.id, UserModel.email, UserModel.avatar)
+        if keyword:
+            stmt = stmt.where(UserModel.name.like(f"%{keyword}%"))
+        stmt = stmt.offset(last).limit(limit)
 
-def create_user(newUser: UserSchema.UserCreate):
-    user = UserModel(
-        name=newUser.name,
-        password=newUser.password,
-        age=newUser.age,
-        birthday=newUser.birthday,
-        email=newUser.email,
-        avatar=newUser.avatar,
+        result = await db_session.execute(stmt)
+        users = result.all()
+
+        return users
+    
+    async def get_user_by_id(self, user_id:str, db_session: AsyncSession = None):
+        stmt = select(UserModel.name, UserModel.id, UserModel.email, UserModel.avatar).where(UserModel.id == user_id)
+        user = (await db_session.execute(stmt)).first()
+        if user:
+            return user
+        return None
+
+    async def get_user_id_by_email(self, email: str, db_session: AsyncSession = None):
+        stmt = select(UserModel.id).where(UserModel.email == email)
+        result = await db_session.execute(stmt)
+        user_id = result.first()
+        if user_id:
+            return user_id
+        return None
+    
+    async def get_user_id_by_id(self, user_id: str, db_session: AsyncSession = None):
+        stmt = select(UserModel.id).where(UserModel.id == user_id)
+        result = await db_session.execute(stmt)
+        user_id = result.first()
+        if user_id:
+            return user_id
+        return None
+
+    async def create_user(newUser: UserSchema.UserCreate, db_session: AsyncSession = None):
+        user = UserModel(
+            name=newUser.name,
+            password=newUser.password,
+            age=newUser.age,
+            birthday=newUser.birthday,
+            email=newUser.email,
+            avatar=newUser.avatar,
         )
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
-    return vars(user)
+        db_session.add(user)
+        await db_session.commit()
 
-def get_users(keyword:str = None, last:int = 0, limit:int = 50):
-    stmt = select(UserModel.name, UserModel.id, UserModel.email, UserModel.avatar)
-    if keyword:
-        stmt = stmt.where(UserModel.name.like(f"%{keyword}%"))
-    users = db_session.execute(stmt).all()
-    return users
+        return user
+    
+    async def update_user(user_id: int, newUser: UserSchema.UserUpdate, db_session: AsyncSession = None):
+        stmt = update(UserModel).where(UserModel.id == user_id).values(
+            name = newUser.Name,
+            password = newUser.password,
+            age = newUser.age,
+            birthday = newUser.birthday,
+            avatar = newUser.avatar
+        )
+        await db_session.execute(stmt)
+        await db_session.commit()
+        
+        return newUser
+
+    async def update_user_password(user_id: int, newUser: UserSchema.UserUpdate, db_session: AsyncSession = None):
+        stmt = update(UserModel).where(UserModel.id == user_id).values(
+            password = newUser.password
+        )
+        await db_session.execute(stmt)
+        await db_session.commit()
+
+        return
+
+    async def delete_users(user_id: int, db_session: AsyncSession = None):
+        stmt = delete(UserModel).where(UserModel.id == user_id)
+        await db_session.execute(stmt)
+        await db_session.commit()
+
+        return

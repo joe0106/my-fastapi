@@ -1,26 +1,53 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from contextlib import asynccontextmanager
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
 
-from models.items import Item
-from models.users import User
 from setting.config import get_settings
-
 
 settings = get_settings()
 
-engine = create_engine(
+#create engine
+engine = create_async_engine(
     settings.database_url,
     echo=True,
     pool_pre_ping=True
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+#create session
+SessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
-def get_db():
-    return SessionLocal()
+@asynccontextmanager
+async def get_db():
+    async with SessionLocal() as db:
+        async with db.begin():
+            yield db
 
-def init_db():
-    Base.metadata.create_all(bind=engine, tables=[User.__table__, Item.__table__])
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+async def close_db():
+    async with engine.begin() as conn:
+        await conn.close()
+
+#decorator
+def db_session_decorator(func):
+    # print("in db_context_decorator")
+    async def wrapper(*args, **kwargs):
+        async with get_db() as db_session:
+            kwargs["db_session"] = db_session
+            result = await func(*args, **kwargs)
+            return result
+    # print("out db_context_decorator")
+    return wrapper
+    
+def crud_class_decorator(cls):
+    # print("in db_class_decorator")
+    for name, method in cls.__dict__.items():
+        if callable(method):
+            setattr(cls, name, db_session_decorator(method))
+    # print("out db_class_decorator")
+    return cls

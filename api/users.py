@@ -1,26 +1,24 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, status, Depends
-from sqlalchemy import select, update, delete
-from sqlalchemy.orm import Session
 
 from schemas import users as UserSchema
-from database.generic import get_db
-from models.users import User as UserModel
-from api.depends import check_user_id, pagination_parms, test_verify_token
-from crud import users as UserCrud
+from api.depends import check_user_id, pagination_parms
+#from api.depends import test_verify_token
+from crud.users import UserCrudManager
 
 router = APIRouter(
     tags=["users"],
-    prefix="/api",
-    dependencies=[Depends(test_verify_token)]
+    prefix="/api"
+    # depend on header
+    #,dependencies=[Depends(test_verify_token)]
 )
 
-db_session: Session = get_db()
+UserCrud = UserCrudManager()
 
 @router.get("/users", 
          response_model=List[UserSchema.UserRead],
          response_description="Get list of all users")
-def get_users(page_params=Depends(pagination_parms)):
+async def get_users(page_params:dict=Depends(pagination_parms)):
     """
     Create an user list with all the information:
 
@@ -30,72 +28,43 @@ def get_users(page_params=Depends(pagination_parms)):
     - **avatar**
 
     """
-    users = UserCrud.get_users(**page_params)
+    users = await UserCrud.get_users(**page_params)
     return users
 
 @router.get("/users/{user_id}", response_model=UserSchema.UserRead)
-def get_user_by_id(user_id: int = Depends(check_user_id), query: str = None):
-    stmt = select(UserModel).where(UserModel.id == user_id)
-    user = db_session.execute(stmt).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+async def get_user_by_id(user_id: int):
+    user = await UserCrud.get_user_by_id(user_id)
+    if user:
+        return user
+    
+    raise HTTPException(status_code=404, detail="User not found")
 
 @router.post("/users", 
           response_model=UserSchema.UserCreateResponse,
           status_code=status.HTTP_201_CREATED)
-def create_users(newUser: UserSchema.UserCreate):
-    user_id = UserCrud.get_user_id_by_email(newUser.email)
+async def create_users(newUser: UserSchema.UserCreate):
+    user_id = await UserCrud.get_user_id_by_email(newUser.email)
     if user_id:
         raise HTTPException(status_code=409, detail="User already exists")
 
-    user = UserCrud.create_user(newUser)
+    user = await UserCrud.create_user(newUser)
     return vars(user)
 
-@router.post("/userCreate" , deprecated=True)
-def create_user_deprecated(newUser: UserSchema.UserCreate):
-    return "deprecated"
-
 @router.put("/users/{user_id}}", response_model=UserSchema.UserUpdateResponse)
-def update_user(user_id: int, newUser: UserSchema.UserUpdate):
-    stmt = select(UserModel).where(UserModel.id == user_id)
-    user = db_session.execute(stmt).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    stmt = update(UserModel).where(UserModel.id == user_id).values(
-        name = newUser.Name,
-        password = newUser.password,
-        age = newUser.age,
-        birthday = newUser.birthday,
-        avatar = newUser.avatar
-    )
-    db_session.execute(stmt)
-    db_session.commit()
-
+async def update_user(newUser: UserSchema.UserUpdate, user_id: int = Depends(check_user_id)):
+    await UserCrud.update_user(user_id, newUser)
     return newUser
 
 @router.put("/users/{user_id}/password", response_model=UserSchema.UserUpdateResponse)
-def update_user_password(user_id: int, newUser: UserSchema.UserUpdate):
-    stmt = select(UserModel).where(UserModel.id == user_id)
-    user = db_session.execute(stmt).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    stmt = update(UserModel).where(UserModel.id == user_id).values(
-        password = newUser.password
-    )
-    db_session.execute(stmt)
-    db_session.commit()
-
+async def update_user_password(newUser: UserSchema.UserUpdate, user_id: int = Depends(check_user_id)):
+    await UserCrud.update_user_password(user_id, newUser)
     return newUser
 
 @router.delete("/users/{user_id}")
-def delete_users(user_id: int = Depends(check_user_id)):
-    stmt = delete(UserModel).where(UserModel.id == user_id)
-    db_session.execute(stmt)
-    db_session.commit()
-
+async def delete_users(user_id: int = Depends(check_user_id)):
+    await UserCrud.delete_users(user_id)
     return
+
+@router.post("/userCreate" , deprecated=True)
+async def create_user_deprecated(newUser: UserSchema.UserCreate):
+    return "deprecated"

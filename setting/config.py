@@ -10,12 +10,12 @@ def get_settings():
 class Settings():
     app_name:str = "iThome2023 FastAPI Tutorial"
     author:str = "Jason Liu"
-
     app_mode: str = os.getenv("APP_MODE")
     port:int = int(os.getenv("PORT"))
     reload:bool = bool(os.getenv("RELOAD"))
-    database_url:str = os.getenv("DATABASE_URL")
-
     # db_type
     db_type:str = os.getenv("DB_TYPE").upper()
-    database_url: str = os.getenv(f"{db_type}_DATABASE_URL")
+    # run_mode
+    run_mode: str = os.getenv("RUN_MODE").upper()
+    # dburl
+    database_url: str = os.getenv(f"{run_mode}_{db_type}_DATABASE_URL")
