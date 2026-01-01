@@ -7,6 +7,7 @@ from schemas import users as UserSchema
 from database.generic import get_db
 from models.users import User as UserModel
 from api.depends import check_user_id, pagination_parms, test_verify_token
+from crud import users as UserCrud
 
 router = APIRouter(
     tags=["users"],
@@ -29,8 +30,7 @@ def get_users(page_params=Depends(pagination_parms)):
     - **avatar**
 
     """
-    stmt = select(UserModel.name, UserModel.id, UserModel.email, UserModel.avatar)
-    users = db_session.execute(stmt).all()
+    users = UserCrud.get_users(**page_params)
     return users
 
 @router.get("/users/{user_id}", response_model=UserSchema.UserRead)
@@ -45,26 +45,11 @@ def get_user_by_id(user_id: int = Depends(check_user_id), query: str = None):
           response_model=UserSchema.UserCreateResponse,
           status_code=status.HTTP_201_CREATED)
 def create_users(newUser: UserSchema.UserCreate):
-    # query using session.query()
-    #user = db_session.query(UserModel).filter(UserModel.email == newUser.email).first()
-    # query using session.execute() a statement
-    stmt = select(UserModel.id).where(UserModel.email == newUser.email)
-    user = db_session.execute(stmt).first()
-    # raise ex if user exist
-    if user:
+    user_id = UserCrud.get_user_id_by_email(newUser.email)
+    if user_id:
         raise HTTPException(status_code=409, detail="User already exists")
 
-    user = UserModel(
-        name=newUser.name,
-        password=newUser.password,
-        age=newUser.age,
-        birthday=newUser.birthday,
-        email=newUser.email,
-        avatar=newUser.avatar,
-        )
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    user = UserCrud.create_user(newUser)
     return vars(user)
 
 @router.post("/userCreate" , deprecated=True)
