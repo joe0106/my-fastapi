@@ -1,6 +1,7 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, status, Depends
 
+from auth.passwd import get_password_hash
 from schemas import users as UserSchema
 from api.depends import check_user_id, pagination_parms
 #from api.depends import test_verify_token
@@ -46,6 +47,9 @@ async def create_users(newUser: UserSchema.UserCreate):
     user_id = await UserCrud.get_user_id_by_email(newUser.email)
     if user_id:
         raise HTTPException(status_code=409, detail="User already exists")
+
+    # hash pwd
+    newUser.password = get_password_hash(newUser.password)
 
     user = await UserCrud.create_user(newUser)
     return vars(user)

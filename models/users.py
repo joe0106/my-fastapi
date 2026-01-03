@@ -10,7 +10,7 @@ from sqlalchemy import Date
 class User(Base):
     __tablename__ = "User"
     id:Mapped[BaseType.int_primary_key]
-    password:Mapped[BaseType.str_50]
+    password:Mapped[BaseType.str_60]
     name:Mapped[BaseType.str_30]
     age:Mapped[int]
     avatar:Mapped[BaseType.optional_str_100]
