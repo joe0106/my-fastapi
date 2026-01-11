@@ -1,9 +1,7 @@
-from sqlalchemy.orm import Session 
 from sqlalchemy import select , update , delete
 from sqlalchemy.ext.asyncio import AsyncSession
-import hashlib
 
-from database.generic import crud_class_decorator, db_session_decorator, get_db
+from database.generic import crud_class_decorator
 from models.users import User as UserModel 
 from schemas import users as UserSchema
 
@@ -45,7 +43,7 @@ class UserCrudManager:
             return user_id
         return None
 
-    async def create_user(newUser: UserSchema.UserCreate, db_session: AsyncSession = None):
+    async def create_user(self, newUser: UserSchema.UserCreate, db_session: AsyncSession = None):
         user = UserModel(
             name=newUser.name,
             password=newUser.password,
@@ -59,7 +57,7 @@ class UserCrudManager:
 
         return user
     
-    async def update_user(user_id: int, newUser: UserSchema.UserUpdate, db_session: AsyncSession = None):
+    async def update_user(self, user_id: int, newUser: UserSchema.UserUpdate, db_session: AsyncSession = None):
         stmt = update(UserModel).where(UserModel.id == user_id).values(
             name = newUser.Name,
             password = newUser.password,
@@ -69,10 +67,10 @@ class UserCrudManager:
         )
         await db_session.execute(stmt)
         await db_session.commit()
-        
+
         return newUser
 
-    async def update_user_password(user_id: int, newUser: UserSchema.UserUpdate, db_session: AsyncSession = None):
+    async def update_user_password(self, user_id: int, newUser: UserSchema.UserUpdate, db_session: AsyncSession = None):
         stmt = update(UserModel).where(UserModel.id == user_id).values(
             password = newUser.password
         )
@@ -81,9 +79,17 @@ class UserCrudManager:
 
         return
 
-    async def delete_users(user_id: int, db_session: AsyncSession = None):
+    async def delete_users(self, user_id: int, db_session: AsyncSession = None):
         stmt = delete(UserModel).where(UserModel.id == user_id)
         await db_session.execute(stmt)
         await db_session.commit()
 
         return
+    
+    async def get_user_in_db(self, email: str, db_session: AsyncSession = None) -> UserSchema.UserInDB:
+        stmt = select(UserModel.id, UserModel.name, UserModel.password).where(UserModel.email == email)
+        result = await db_session.execute(stmt)
+        user = result.first()
+        if user:
+            return user
+        return None

@@ -3,7 +3,10 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 class UserBase(BaseModel):
-    id: int
+    name: str
+    # model_config = {
+    #     "from_attributes": True
+    # }
 
 class UserCreate(UserBase):
     password: str = Field(min_length=6)
@@ -30,17 +33,17 @@ class UserCreate(UserBase):
     }
 
 class UserRead(UserBase):
-    name: str
+    id: str
     email: str
     avatar: Optional[str] = None
 
 class UserCreateResponse(UserBase):
-    name: str
+    id: int
     email: str
 
 class UserUpdate(UserBase):
-    password: Optional[str] = Field(min_length=6)
-    avatar: Optional[str] = Field(min_length=3)
+    #password: Optional[str] = Field(min_length=6)
+    avatar: Optional[str] = None
     age: Optional[int] = Field(gt=0, lt=100)
     birthday: Optional[date] = Field()
 
@@ -48,6 +51,16 @@ class UserUpdatePassword(UserBase):
     password: str
 
 class UserUpdateResponse(UserBase):
-    avatar: Optional[str] = Field(min_length=3)
+    avatar: Optional[str] = None
     age: Optional[int] = Field(gt=0, lt=100)
     birthday: Optional[date] = Field()
+
+class UserInDB(BaseModel):
+    id: int
+    name: str
+    password: str
+
+class CurrentUser(BaseModel):
+    id: int
+    name: str
+    email: str
