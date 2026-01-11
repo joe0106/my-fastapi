@@ -1,11 +1,11 @@
+from datetime import date
+from typing import Optional
 import hashlib
 
-from typing import Optional
-
-from models.base import Base, BaseType
-from datetime import date
-from sqlalchemy.orm import Mapped, relationship, mapped_column
 from sqlalchemy import Date
+from sqlalchemy.orm import Mapped, relationship, mapped_column
+
+from models.base import Base,BaseType
 
 class User(Base):
     __tablename__ = "User"
@@ -27,7 +27,7 @@ class User(Base):
         )
     
     def __init__(self, password:str, name:str, age:int, avatar:Optional[str], birthday:date, email:str) -> None:
-        self.password = hashlib.md5(password.encode()+b'secret').hexdigest()
+        self.password = password
         self.name = name
         self.age = age
         self.avatar = avatar
@@ -40,4 +40,4 @@ class User(Base):
 
     # Debug、詳細顯示資訊使用
     def __repr__(self) -> str:
-        return f"User(id={self.id}, password=******, name={self.name}, age={self.age}, avatar={self.avatar}, birthday={self.birthday}, email={self.email})"
+        return f"User(id={self.id}, password={self.password}, name={self.name}, age={self.age}, avatar={self.avatar}, birthday={self.birthday}, email={self.email})"
