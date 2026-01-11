@@ -1,9 +1,5 @@
 from fastapi import FastAPI
 
-from api.users import router as users_router
-from api.items import router as items_router
-from api.infor import router as infor_router
-from database.generic import init_db
 from setting.config import get_settings
 
 settings = get_settings()
