@@ -1,11 +1,16 @@
 from fastapi import APIRouter, HTTPException, status
 from auth.jwt import create_refresh_token, create_token_pair, verify_refresh_token
+from auth.passwd import verify_password, get_password_hash
+from crud.users import UserCrudManager
 from schemas.auth import RefreshRequest, Token, login_form_schema, oauth2_token_scheme
+from schemas.users import UserInDB
 
 router = APIRouter(
     tags = ["auth"],
     prefix="/auth"
 )
+
+UserCrud = UserCrudManager()
 
 @router.post("/login", response_model=Token)
 async def login(form_data: login_form_schema):
@@ -16,10 +21,20 @@ async def login(form_data: login_form_schema):
     - **password**
 
     """
-    return await create_token_pair({
-        "username": form_data.username,
-        "username": form_data.username
-    })
+    user_in_db: UserInDB = UserCrud.get_user_in_db(form_data.username)
+
+    if not user_in_db or \
+        not verify_password(form_data.password, user_in_db.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    return await create_token_pair(
+        {"username": user_in_db.name, "id": user_in_db.id},
+        {"username": user_in_db.name, "id": user_in_db.id}
+    )
 
 @router.post("/refresh", response_model=Token)
 async def refresh(refresh_data: RefreshRequest):
@@ -39,14 +54,15 @@ async def refresh(refresh_data: RefreshRequest):
         )
     
     username: str = payload.get["user"]
-    if not username:
+    u_id: int = payload.get["id"]
+    if not username or not u_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token ( No `username` in payload )",
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    return await create_token_pair({
-        "username": username,
-        "username": username
-    })
+    return await create_token_pair(
+        {"username": username, "id": u_id},
+        {"username": username, "id": u_id}
+    )
