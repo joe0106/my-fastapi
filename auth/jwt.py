@@ -38,3 +38,20 @@ async def verify_refresh_token(token: str):
         )
     except JWTError:
         return None
+    
+async def verify_access_token(token: str):
+    try:
+        payload = jwt.decode(token, settings.access_token_secret)
+        return payload
+    except ExpiredSignatureError:
+        raise  HTTPException(
+            status_code=401,
+            detail="Token expired",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    except JWTError:
+        raise  HTTPException(
+            status_code=401,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
