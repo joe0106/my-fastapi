@@ -37,12 +37,13 @@ async def get_users(page_params:dict=Depends(pagination_parms)):
     users = await UserCrud.get_users(**page_params)
     return users
 
-@router.get("/users/{user_id}", response_model=UserSchema.UserRead)
-async def get_user_by_id(user_id: int):
-    user = await UserCrud.get_user_by_id(user_id)
+@router.get("/users/{user_id}" , response_model=UserSchema.UserRead )
+async def get_user_infor_by_id(user_id: int):
+
+    user = await UserCrud.get_user_infor_by_id(user_id)
     if user:
         return user
-    
+        
     raise HTTPException(status_code=404, detail="User not found")
 
 @router.post("/users", 
@@ -53,17 +54,14 @@ async def create_users(newUser: UserSchema.UserCreate):
     if user_id:
         raise HTTPException(status_code=409, detail="User already exists")
 
-    # hash pwd
-    newUser.password = get_password_hash(newUser.password)
-
     user = await UserCrud.create_user(newUser)
     return user
 
-@router.put("/users/{user_id}}", response_model=UserSchema.UserUpdateResponse)
+@router.put("/users/{user_id}", response_model=UserSchema.UserUpdateResponse)
 async def update_user(
     newUser: UserSchema.UserUpdate, 
     user_id: int = Depends(check_user_id),
-    user = Depends(get_current_user)):
+    user: UserSchema.CurrentUser = Depends(get_current_user)):
     if user.id != user_id:
         raise Exception403
     

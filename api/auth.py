@@ -7,10 +7,22 @@ from schemas.users import UserInDB
 
 router = APIRouter(
     tags = ["auth"],
-    prefix="/auth"
+    prefix = "/api/auth"
 )
 
 UserCrud = UserCrudManager()
+
+exception_invalid_token = HTTPException(
+    status_code=401,
+    detail="Invalid token",
+    headers={"WWW-Authenticate": "Bearer"}
+)
+
+exception_invalid_login = HTTPException(
+    status_code=401,
+    detail="Incorrect username or password",
+    headers={"WWW-Authenticate": "Bearer"}
+)
 
 @router.post("/login", response_model=Token)
 async def login(form_data: login_form_schema):
@@ -21,15 +33,11 @@ async def login(form_data: login_form_schema):
     - **password**
 
     """
-    user_in_db: UserInDB = UserCrud.get_user_in_db(form_data.username)
+    user_in_db: UserInDB = await UserCrud.get_user_in_db(form_data.username)
 
     if not user_in_db or \
         not verify_password(form_data.password, user_in_db.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
+        raise exception_invalid_login
 
     return await create_token_pair(
         {"username": user_in_db.name, "id": user_in_db.id},
@@ -45,22 +53,11 @@ async def refresh(refresh_data: RefreshRequest):
 
     """
     payload: dict = await verify_refresh_token(refresh_data.refresh_token)
-
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
     
-    username: str = payload.get["user"]
-    u_id: int = payload.get["id"]
+    username: str = payload.get("username")
+    u_id: int = payload.get("id")
     if not username or not u_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token ( No `username` in payload )",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
+        raise exception_invalid_token
 
     return await create_token_pair(
         {"username": username, "id": u_id},
