@@ -18,7 +18,7 @@ async def create_refresh_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now() + timedelta(minutes=settings.refresh_token_expire_minutes)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.access_token_secret)
+    encoded_jwt = jwt.encode(to_encode, settings.refresh_token_secret)
     return encoded_jwt
 
 async def create_token_pair(access_data: dict, refresh_data: dict):
@@ -36,7 +36,7 @@ async def verify_refresh_token(token: str):
             detail="Token Expired", 
             headers={"WWW_Authenticate": "Bearer"}
         )
-    except JWTError:
+    except JWTError as ex:
         return None
     
 async def verify_access_token(token: str):
