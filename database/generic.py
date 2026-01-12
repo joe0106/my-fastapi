@@ -1,7 +1,10 @@
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.schema import CreateTable
 
+from models.users import User
+from models.items import Item
 from setting.config import get_settings
 
 settings = get_settings()
@@ -14,7 +17,7 @@ engine = create_async_engine(
 )
 
 #create session
-SessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = async_sessionmaker(engine, expire_on_commit=False, autocommit=False)
 
 class Base(DeclarativeBase):
     pass
@@ -26,6 +29,10 @@ async def get_db():
             yield db
 
 async def init_db():
+    # async with SessionLocal() as db:
+    #     async with db.begin():
+    #         await db.execute(CreateTable(User.__table__,if_not_exists=True))
+    #         await db.execute(CreateTable(Item.__table__,if_not_exists=True))
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
@@ -43,7 +50,7 @@ def db_session_decorator(func):
             return result
     # print("out db_context_decorator")
     return wrapper
-    
+
 def crud_class_decorator(cls):
     # print("in db_class_decorator")
     for name, method in cls.__dict__.items():
