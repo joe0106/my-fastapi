@@ -31,8 +31,6 @@ class UserCrudManager:
     
     async def get_user_by_id(self, user_id:str, db_session: AsyncSession = None):
         stmt = select(UserModel.name, UserModel.id, UserModel.email, UserModel.avatar).where(UserModel.id == user_id)
-        # result = await db_session.execute(stmt)
-        # user = result.first()
         user = (await db_session.execute(stmt)).first()
         if user:
             return user
