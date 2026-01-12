@@ -6,7 +6,7 @@ from schemas.auth import oauth2_token_scheme
 
 UserCrud = UserCrudManager()
 
-async def get_current_user(token = oauth2_token_scheme):
+async def get_current_user(token: oauth2_token_scheme):
     payload = await verify_access_token(token)
     user_id = int(payload.get("id"))
     user = await UserCrud.get_user_by_id(user_id)
