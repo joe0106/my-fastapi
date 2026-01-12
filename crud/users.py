@@ -1,6 +1,7 @@
 from sqlalchemy import select , update , delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from auth.passwd import get_password_hash
 from database.generic import crud_class_decorator
 from models.users import User as UserModel 
 from schemas import users as UserSchema
@@ -20,8 +21,18 @@ class UserCrudManager:
 
         return users
     
+    async def get_user_infor_by_id(self,user_id: int,db_session:AsyncSession):
+        stmt = select(UserModel.name,UserModel.id,UserModel.email,UserModel.avatar).where(UserModel.id == user_id)
+        user = (await db_session.execute(stmt)).first()
+        if user:
+            return user
+            
+        return None
+    
     async def get_user_by_id(self, user_id:str, db_session: AsyncSession = None):
         stmt = select(UserModel.name, UserModel.id, UserModel.email, UserModel.avatar).where(UserModel.id == user_id)
+        # result = await db_session.execute(stmt)
+        # user = result.first()
         user = (await db_session.execute(stmt)).first()
         if user:
             return user
@@ -35,18 +46,15 @@ class UserCrudManager:
             return user_id
         return None
     
-    async def get_user_id_by_id(self, user_id: str, db_session: AsyncSession = None):
+    async def get_user_id_by_id(self, user_id: int, db_session: AsyncSession = None):
         stmt = select(UserModel.id).where(UserModel.id == user_id)
         result = await db_session.execute(stmt)
-        user_id = result.first()
-        if user_id:
-            return user_id
-        return None
+        return result.scalar()
 
     async def create_user(self, newUser: UserSchema.UserCreate, db_session: AsyncSession = None):
         user = UserModel(
             name=newUser.name,
-            password=newUser.password,
+            password=get_password_hash(newUser.password),
             age=newUser.age,
             birthday=newUser.birthday,
             email=newUser.email,
@@ -59,8 +67,7 @@ class UserCrudManager:
     
     async def update_user(self, user_id: int, newUser: UserSchema.UserUpdate, db_session: AsyncSession = None):
         stmt = update(UserModel).where(UserModel.id == user_id).values(
-            name = newUser.Name,
-            password = newUser.password,
+            name = newUser.name,
             age = newUser.age,
             birthday = newUser.birthday,
             avatar = newUser.avatar
