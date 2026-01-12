@@ -33,7 +33,7 @@ class UserCreate(UserBase):
     }
 
 class UserRead(UserBase):
-    id: str
+    id: int
     email: str
     avatar: Optional[str] = None
 
