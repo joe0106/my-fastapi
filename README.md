@@ -22,6 +22,18 @@ uv run python3 main.py --sync
 docker run --name fastapi_postgres_dev -e POSTGRES_USER=fastapi_tutorial -e POSTGRES_PASSWORD=fastapi_tutorial_password -e POSTGRES_DB=fastapi_tutorial -p 5432:5432 --volume fastapi_tutorial_postgres_dev:/var/lib/postgresql/data -d postgres:15.1 
 ```
 
+### 容器指令
+```bash
+# describe db opject
+\d "User"
+# list all tables
+\dt
+# quit
+\q
+# help
+\?
+```
+
 ## MySQL 容器啟用指令
 
 ```bash
