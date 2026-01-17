@@ -1,7 +1,7 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from api.depends import check_item_id
+from api.depends import check_item_id, pagination_parms
 from auth.utils import get_current_user
 from crud.items import ItemCrudManager
 from schemas import items as ItemSchema
@@ -15,27 +15,32 @@ router = APIRouter(
 fake_db = get_db()
 
 Exception403 = HTTPException(status_code=403, detail="Forbidden")
+Exception404 = HTTPException(status_code=404, detail="Item not found")
 
 ItemCrud = ItemCrudManager()
 
-@router.get("/items", response_model=List[ItemSchema.ItemRead])
-def get_items(query: str = None):
-    return fake_db["items"]
+@router.get("/items", 
+            response_model=List[ItemSchema.ItemRead],
+            response_description="Get list of all Items")
+async def get_items(pageparams: dict = Depends(pagination_parms)):
+    return await ItemCrud.get_items(**pageparams)
 
-@router.get("/items/{item_id}", response_model=ItemSchema.ItemRead)
-def get_item_by_id(item_id: int, query: str = None):
-    for item in fake_db["items"]:
-        if item["id"] == item_id:
-            return item
-    raise HTTPException(status_code=404, detail="Item not found")
+@router.get("/items/{item_id}", 
+            response_model=ItemSchema.ItemRead)
+async def get_item_by_id(item_id: int):
+    Item = await ItemCrud.get_item_by_id(item_id)
+    if Item:
+        return Item
+    raise Exception404
 
-@router.post("/items", response_model=ItemSchema.ItemCreate)
-def create_item(newItem: ItemSchema.ItemCreate):
-    for item in fake_db["items"]:
-        if newItem.id == item["id"]:
-            raise HTTPException(status_code=409, detail="Item already exist")
-    fake_db["items"].append(newItem.model_dump())
-    return newItem
+@router.post("/items", 
+             response_model=ItemSchema.ItemCreateResponse,
+             status_code=status.HTTP_201_CREATED)
+async def create_item(
+    newItem: ItemSchema.ItemCreate,
+    user: UserSchema.CurrentUser = Depends(get_current_user)):
+    item = await ItemCrud.create_item(newItem, user.id)
+    return item
 
 @router.delete("/items/{item_id}")
 async def delete_items(
