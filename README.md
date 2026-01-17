@@ -5,16 +5,16 @@
 # How to run
 
 ```bash
-uv run python3 main.py
+uv run python3 run.py
 # dbtype
-uv run python3 main.py --db postgress
+uv run python3 run.py --db postgress
 # run mode
-uv run python3 main.py --sync
+uv run python3 run.py --sync
 ```
 
 # Container
 
-資料庫使用PostgresSQL及MySQL兩個DB，於`uv run python3 main.py --db postgress`時可指定（預設為PostgresSQL）。
+資料庫使用PostgresSQL及MySQL兩個DB，於`uv run python3 run.py --db postgress`時可指定（預設為PostgresSQL）。
 
 ## PostgresSQL 容器啟用指令
 
@@ -24,6 +24,8 @@ docker run --name fastapi_postgres_dev -e POSTGRES_USER=fastapi_tutorial -e POST
 
 ### 容器指令
 ```bash
+# enter container
+docker exec -it {container_id} psql -U fastapi_tutorial
 # describe db opject
 \d "User"
 # list all tables
@@ -32,6 +34,10 @@ docker run --name fastapi_postgres_dev -e POSTGRES_USER=fastapi_tutorial -e POST
 \q
 # help
 \?
+#case sensitive
+select * from "User"; 
+#顯示使用者
+select * from User;
 ```
 
 ## MySQL 容器啟用指令
