@@ -51,3 +51,12 @@ docker run --name fastapi_mysql_dev -e MYSQL_USER=fastapi_tutorial -e MYSQL_ROOT
 ```bash
 uv run python3 main.py --sync
 ```
+
+# Pytest testing framework
+
+```bash
+#cd into /tests folder
+cd tests
+#py test指向測試.py的目錄
+uv run pytest tests/
+```

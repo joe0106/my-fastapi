@@ -1,0 +1,43 @@
+[
+  {
+    "password": "123456",
+    "name": "Alice Chen",
+    "avatar": "https://i.imgur.com/4M34hi2.png",
+    "age": 18,
+    "email": "alice.chen.7392@outlook.com",
+    "birthday": "2003-01-01"
+  },
+  {
+    "password": "abcdef",
+    "name": "Michael Wang",
+    "avatar": "https://i.imgur.com/4M34hi2.png",
+    "age": 25,
+    "email": "mwang.creative.481@gmail.com",
+    "birthday": "1998-01-01"
+  },
+  {
+    "password": "qwerty123",
+    "name": "Sarah Johnson",
+    "avatar": "https://i.imgur.com/4M34hi2.png",
+    "age": 30,
+    "email": "sarah.johnson.5628@yahoo.com",
+    "birthday": "1993-06-15"
+  },
+  {
+    "password": "pass1234",
+    "name": "David Liu",
+    "avatar": "https://i.imgur.com/4M34hi2.png",
+    "age": 22,
+    "email": "d.liu.tech.9145@protonmail.com",
+    "birthday": "2001-03-20"
+  },
+  {
+    "password": "secure789",
+    "name": "Emma Rodriguez",
+    "avatar": "https://i.imgur.com/4M34hi2.png",
+    "age": 28,
+    "email": "emma.r.design.3267@icloud.com",
+    "birthday": "1995-11-08"
+  }
+
+]
