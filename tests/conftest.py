@@ -37,7 +37,7 @@ async def dependencies(request):
     os.environ["DB_TYPE"] = args.getoption("db")
     print("DB_TYPE",os.getenv("DB_TYPE"))
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def event_loop():
     loop = asyncio.get_event_loop()
     yield loop
@@ -46,12 +46,18 @@ def event_loop():
 @pytest_asyncio.fixture(scope="module")
 async def async_client(dependencies) -> AsyncClient:
     from .app import app
+    from database.generic import init_db
+    await init_db()  # 在測試開始前初始化資料庫
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
          yield client
+    # Teardown: 清空資料庫
+    from database.generic import engine
+    from sqlalchemy import text
+    async with engine.begin() as conn:
+        await conn.execute(text('truncate table "User" CASCADE;'))
 
 @pytest_asyncio.fixture(scope="module")
 async def get_user_data():
     with open("data/user_data.json") as f:
         data = json.load(f)
     return data
-    
