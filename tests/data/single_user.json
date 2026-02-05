@@ -1,0 +1,10 @@
+[
+  {
+    "password": "123456",
+    "name": "single user",
+    "avatar": "https://i.imgur.com/4M34hi2.png",
+    "age": 18,
+    "email": "single.user@outlook.com",
+    "birthday": "2003-01-01"
+  }
+]
