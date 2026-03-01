@@ -68,18 +68,18 @@ async def update_user(
     await UserCrud.update_user(user_id, newUser)
     return newUser
 
-@router.put("/users/{user_id}/password", response_model=UserSchema.UserUpdateResponse)
+@router.put("/users/{user_id}/password", status_code=status.HTTP_204_NO_CONTENT)
 async def update_user_password(
-    newUser: UserSchema.UserUpdate, 
+    newUser: UserSchema.UserUpdatePassword, 
     user_id: int = Depends(check_user_id),
     user: UserSchema.CurrentUser = Depends(get_current_user)):
     if user.id != user_id:
         Exception403
 
     await UserCrud.update_user_password(user_id, newUser)
-    return newUser
+    return
 
-@router.delete("/users/{user_id}")
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_users(
     user_id: int = Depends(check_user_id),
     user: UserSchema.CurrentUser = Depends(get_current_user)):

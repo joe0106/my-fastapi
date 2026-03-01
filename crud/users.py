@@ -75,9 +75,9 @@ class UserCrudManager:
 
         return newUser
 
-    async def update_user_password(self, user_id: int, newUser: UserSchema.UserUpdate, db_session: AsyncSession = None):
+    async def update_user_password(self, user_id: int, newUser: UserSchema.UserUpdatePassword, db_session: AsyncSession = None):
         stmt = update(UserModel).where(UserModel.id == user_id).values(
-            password = newUser.password
+            password = get_password_hash(newUser.password)
         )
         await db_session.execute(stmt)
         await db_session.commit()

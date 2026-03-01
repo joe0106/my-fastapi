@@ -42,7 +42,7 @@ class UserUpdate(UserBase):
     age: Optional[int] = Field(gt=0, lt=100)
     birthday: Optional[date] = Field()
 
-class UserUpdatePassword(UserBase):
+class UserUpdatePassword(BaseModel):
     password: str
 
 class UserUpdateResponse(UserBase):
