@@ -14,5 +14,5 @@ wheels/
 
 .opencode
 
-#.env
+.env
 .env.*
