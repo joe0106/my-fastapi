@@ -7,12 +7,21 @@ wheels/
 *.egg-info
 
 # Virtual environments
-.venv
+.venv/
 
 # OS-specific files
 **/.DS_Store
 
+# IDE-specific files
+.vscode/
+
+# ai agent files
 .opencode
 
+# env files
 **/.env
 **/.env.*
+
+.pytest_cache/
+
+.python-version
