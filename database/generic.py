@@ -5,6 +5,7 @@ from sqlalchemy.schema import CreateTable
 
 from models.users import User
 from models.items import Item
+from models.base import Base
 from setting.config import get_settings
 
 settings = get_settings()
@@ -19,8 +20,8 @@ engine = create_async_engine(
 #create session
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False, autocommit=False)
 
-class Base(DeclarativeBase):
-    pass
+# class Base(DeclarativeBase):
+#     pass
 
 @asynccontextmanager
 async def get_db():
@@ -29,6 +30,7 @@ async def get_db():
             yield db
 
 async def init_db():
+    #test 1
     # async with SessionLocal() as db:
     #     async with db.begin():
     #         await db.execute(CreateTable(User.__table__,if_not_exists=True))
