@@ -13,6 +13,4 @@ db_volumes/
 fastapi_tutorial_mysql/
 fastapi_tutorial_postgres/
 **/.DS_Store
-uv.lock
-pyproject.toml
 .python-version
