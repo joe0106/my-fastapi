@@ -60,3 +60,18 @@ cd tests
 #py test指向測試.py的目錄
 uv run pytest tests/
 ```
+
+# Docker build
+
+```bash
+docker build . -t my-fastapi
+docker image ls
+```
+
+# Docker compose
+
+```bash
+docker compose up
+docker compose ps
+docker compose ls
+```
