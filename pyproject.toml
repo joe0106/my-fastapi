@@ -22,6 +22,7 @@ dependencies = [
     "pytest-sugar>=1.1.1",
     "python-jose>=3.5.0",
     "python-multipart>=0.0.21",
+    "redis-om>=1.1.0",
     "sqlalchemy>=2.0.45",
     "uvicorn>=0.38.0",
 ]

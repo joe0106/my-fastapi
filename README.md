@@ -61,6 +61,17 @@ cd tests
 uv run pytest tests/
 ```
 
+- 特定mark測試使用mark屬性
+
+```py
+@pytest.mark.my_mark
+def test_redis():
+```
+
+```bash
+uv run pytest -m my_mark
+```
+
 # Docker build
 
 ```bash
@@ -74,4 +85,13 @@ docker image ls
 docker compose up
 docker compose ps
 docker compose ls
+```
+
+# Redis Server
+
+```bash
+#redis image本身沒有支援find功能
+docker run --name fastapi_redis_dev -p 6379:6379 -d redis --requirepass "fastapi_redis_password"
+#使用redis-stack image除redis本體外，包含更多功能
+docker run --name fastapi_redis_dev -p 6379:6379 -d redis/redis-stack:latest
 ```
