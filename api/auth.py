@@ -33,7 +33,7 @@ async def login(form_data: login_form_schema):
     - **password**
 
     """
-    user_in_db: UserInDB = await UserCrud.get_user_in_db(form_data.username)
+    user_in_db: UserInDB = await UserCrud.get_user_in_db(email=form_data.username)
 
     if not user_in_db or \
         not verify_password(form_data.password, user_in_db.password):
