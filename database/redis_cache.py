@@ -37,7 +37,7 @@ def generic_cache_get(prefix: str, key: str, cls: object):
             #未使用關鍵字參數就無法查詢cache，故呼叫原方法
             value_key = kwargs.get(key)
             if not value_key:
-                return func(*args, **kwargs)
+                return await func(*args, **kwargs)
             
             #redis key
             cache_key = f"{prefix}:{value_key}"
@@ -62,5 +62,40 @@ def generic_cache_get(prefix: str, key: str, cls: object):
             #return query result
             return sql_result
 
+        return wrapper
+    return inner
+
+def generic_cache_update(prefix: str, key: str):
+    rc = redis.Redis(connection_pool=CONNECTION_POOL)
+    def inner(func):
+        async def wrapper(*args, **kwargs):
+            value_key = kwargs.get(key)
+            if not value_key:
+                return await func(*args, **kwargs)
+            # redis key
+            cache_key = f"{prefix}:{value_key}"
+            try:
+                sql_result = await func(*args, **kwargs)
+                rc.hset(cache_key, mapping=query_res_to_dict(sql_result))
+            except:
+                pass
+            return sql_result
+        return wrapper
+    return inner
+
+def generic_cache_delete(prefix: str, key: str):
+    rc = redis.Redis(connection_pool=CONNECTION_POOL)
+    def inner(func):
+        async def wrapper(*args, **kwargs):
+            value_key = kwargs.get(key)
+            if not value_key:
+                return await func(*args, **kwargs)
+            # redis key
+            cache_key = f"{prefix}:{value_key}"
+            try:
+                rc.delete(cache_key)
+            except:
+                pass
+            return await func(*args, **kwargs)
         return wrapper
     return inner
