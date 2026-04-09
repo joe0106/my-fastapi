@@ -3,14 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.passwd import get_password_hash
 from database.generic import crud_class_decorator
-from database.redis_cache import generic_cache_get, generic_cache_update, generic_cache_delete
+from database.redis_cache import generic_cache_get, generic_cache_update, generic_cache_delete, generic_pagenation_cache_get
 from models.users import User as UserModel 
 from schemas import users as UserSchema
 
 @crud_class_decorator
 class UserCrudManager:
 
-    #@db_session_decorator
+    @generic_pagenation_cache_get(prefix="user", cls=UserSchema.UserRead)
     async def get_users(self, keyword:str = None, last:int = 0, limit:int = 50, db_session: AsyncSession = None):
         stmt = select(UserModel.name, UserModel.id, UserModel.email, UserModel.avatar)
         if keyword:
@@ -68,7 +68,7 @@ class UserCrudManager:
 
         return user
     
-    @generic_cache_update(prefix="user", key="user_id")
+    @generic_cache_update(prefix="user", key="user_id", update_with_page=True, pagenation_key="id")
     async def update_user(self, user_id: int, newUser: UserSchema.UserUpdate, db_session: AsyncSession = None):
         stmt = update(UserModel).where(UserModel.id == user_id).values(
             name = newUser.name,
