@@ -5,6 +5,7 @@ Dockerfile
 *.env
 .git/
 .gitignore
+.github/
 README.md
 tests/
 .vscode/

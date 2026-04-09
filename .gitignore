@@ -17,6 +17,7 @@ wheels/
 
 # ai agent files
 .opencode
+.github/
 
 # env files
 **/.env
