@@ -15,6 +15,7 @@ def pytest_addoption(parser):
     parser.addoption("--db", help="Run the server in database type.",choices=["mysql","postgresql"], default="postgresql")
 
 @pytest_asyncio.fixture(scope="session")
+#@pytest.fixture(scope="session")
 async def dependencies(request):
     args = request.config
 
@@ -43,7 +44,7 @@ async def dependencies(request):
 #     yield loop
 #     loop.close()
 
-@pytest_asyncio.fixture(scope="module")
+@pytest_asyncio.fixture(scope="session")
 async def async_client(dependencies) -> AsyncClient:
     from .app import app
     from database.generic import init_db
