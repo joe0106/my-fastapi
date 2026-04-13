@@ -163,14 +163,14 @@ def generic_pagenation_cache_get(prefix: str, cls: object):
             try:
                 redis_result: list = rc.zrange(name=cache_key, start=last, end=right, withscores=False, byscore=False)
 
-                data = []
+                str_result = ""
                 if len(redis_result) > 0:
                     for row_str in redis_result:
                         if isinstance(row_str, (bytes, bytearray)):
                             row_str = row_str.decode("utf-8")
-                        row_dict = ast.literal_eval(row_str)
-                        data.append(cls(**row_dict))
-                    return data
+                        str_result += row_str + ","
+                        
+                    return ast.literal_eval(f"[{str_result[:-1]}]")
             except Exception as e:
                 print(f'redis error: {e}')
                 pass
