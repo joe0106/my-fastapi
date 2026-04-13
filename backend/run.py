@@ -1,8 +1,16 @@
 import os
 import argparse
+import sys
+from pathlib import Path
 import uvicorn
 
 from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "run the server in different modes")
@@ -22,11 +30,11 @@ if __name__ == "__main__":
 
     # 判斷環境
     if args.prod:
-        load_dotenv("setting/.env.prod")
+        load_dotenv(BASE_DIR / "setting" / ".env.prod")
     elif args.test:
-        load_dotenv("setting/.env.test")
+        load_dotenv(BASE_DIR / "setting" / ".env.test")
     else:
-        load_dotenv("setting/.env.dev")
+        load_dotenv(BASE_DIR / "setting" / ".env.dev")
 
     # 同步或非同步存取
     if args.sync:
@@ -37,4 +45,9 @@ if __name__ == "__main__":
     # export DB_TYPE 環境變數
     os.environ["DB_TYPE"] = args.db
 
-    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT")), reload=bool(os.getenv("RELOAD")))
+    uvicorn.run(
+        "backend.main:app",
+        host="0.0.0.0",
+        port=int(os.getenv("PORT")),
+        reload=os.getenv("RELOAD", "").lower() in {"1", "true", "yes", "on"},
+    )

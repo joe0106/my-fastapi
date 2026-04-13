@@ -1,6 +1,7 @@
 
 from functools import lru_cache
 import json
+from pathlib import Path
 import random
 import pytest
 
@@ -8,7 +9,8 @@ from backend.tests.conftest import async_client
 
 @lru_cache()
 def get_user_data():
-    with open("./tests/data/user_data.json") as f:
+    data_path = Path(__file__).parent / "data" / "user_data.json"
+    with open(data_path, encoding="utf8") as f:
         data = json.load(f)
     return data
 

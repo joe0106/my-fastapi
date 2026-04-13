@@ -1,11 +1,16 @@
 import json
 import os
+import sys
 from pathlib import Path
 import pytest_asyncio
 import pytest
 import asyncio
 from dotenv import load_dotenv
 from httpx import AsyncClient, ASGITransport
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 def pytest_addoption(parser):
     parser.addoption("--prod",action="store_true", help="Run the server in production mode.")
