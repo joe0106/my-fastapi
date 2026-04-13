@@ -23,9 +23,10 @@ def check_user_id(user_id: int):
         raise HTTPException(status_code=404, detail="User not found")
     return user.id
 
-def pagination_parms(keyword:Optional[str]=None, last:int=0, limit:int=50):
+def pagination_parms(keyword:Optional[str]=None, email: Optional[str]=None, last:int=0, limit:int=50):
     return {
         "keyword": keyword,
+        "email": email,
         "last": last,
         "limit": limit
     }

@@ -13,6 +13,7 @@ class UserCrudManager:
     @generic_pagenation_cache_get(prefix="user", cls=UserSchema.UserRead)
     async def get_users(self, keyword:str = None, last:int = 0, limit:int = 50, db_session: AsyncSession = None):
         stmt = select(UserModel.name, UserModel.id, UserModel.email, UserModel.avatar)
+
         if keyword:
             stmt = stmt.where(UserModel.name.like(f"%{keyword}%"))
         stmt = stmt.offset(last).limit(limit)
@@ -21,6 +22,14 @@ class UserCrudManager:
         users = result.all()
 
         return users
+
+    @generic_cache_get(prefix="user", key="email", cls=UserSchema.UserRead)
+    async def get_user_by_email(self, email: str, db_session: AsyncSession = None) -> UserSchema.UserRead:
+        stmt = select(UserModel.name, UserModel.id, UserModel.email, UserModel.avatar).where(UserModel.email == email)
+        user = (await db_session.execute(stmt)).first()
+        if user:
+            return UserSchema.UserRead(**user._asdict())
+        return None
     
     @generic_cache_get(prefix="user", key="user_id", cls=UserSchema.UserInfor)
     async def get_user_infor_by_id(self,user_id: int,db_session:AsyncSession) -> UserSchema.UserInfor:

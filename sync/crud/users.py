@@ -36,3 +36,8 @@ def get_users(keyword:str = None, last:int = 0, limit:int = 50):
         stmt = stmt.where(UserModel.name.like(f"%{keyword}%"))
     users = db_session.execute(stmt).all()
     return users
+
+def get_user_by_email(email: str):
+    stmt = select(UserModel.name, UserModel.id, UserModel.email, UserModel.avatar).where(UserModel.email == email)
+    user = db_session.execute(stmt).first()
+    return user

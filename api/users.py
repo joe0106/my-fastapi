@@ -34,8 +34,18 @@ async def get_users(page_params:dict=Depends(pagination_parms)):
     - **avatar**
 
     """
-    users = await UserCrud.get_users(**page_params)
-    return users
+    email = page_params.pop("email")
+    if not email:
+        return await UserCrud.get_users(**page_params)
+
+    user = await UserCrud.get_user_by_email(email=email)
+    if not user:
+        return []
+
+    if page_params["keyword"] and page_params["keyword"] not in user.name:
+        return []
+
+    return [user]
 
 @router.get("/users/{user_id}" , response_model=UserSchema.UserInfor)
 async def get_user_infor_by_id(user_id: int):

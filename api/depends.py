@@ -32,9 +32,10 @@ async def check_item_id(item_id:int):
         raise HTTPException(status_code=404, detail="Item not found")
     return item
 
-def pagination_parms(keyword:Optional[str]=None, last:int=0, limit:int=50):
+def pagination_parms(keyword:Optional[str]=None, email: Optional[str]=None, last:int=0, limit:int=50):
     return {
         "keyword": keyword,
+        "email": email,
         "last": last,
         "limit": limit
     }

@@ -30,8 +30,18 @@ def get_users(page_params=Depends(pagination_parms)):
     - **avatar**
 
     """
-    users = UserCrud.get_users(**page_params)
-    return users
+    email = page_params.pop("email")
+    if not email:
+        return UserCrud.get_users(**page_params)
+
+    user = UserCrud.get_user_by_email(email=email)
+    if not user:
+        return []
+
+    if page_params["keyword"] and page_params["keyword"] not in user.name:
+        return []
+
+    return [user]
 
 @router.get("/users/{user_id}", response_model=UserSchema.UserRead)
 def get_user_by_id(user_id: int = Depends(check_user_id), query: str = None):
