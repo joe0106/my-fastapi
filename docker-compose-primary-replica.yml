@@ -1,0 +1,61 @@
+services:
+  primary:
+    container_name: primary
+    image: postgres:15.1
+    restart: always
+    volumes:
+      - ./db_volumes/primary-replica/primary:/var/lib/postgresql/data
+    expose:
+      - 5432
+    env_file:
+      - ./primary-replica/db.env
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "fastapi_tutorial", "-d", "fastapi_tutorial"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      my_network:
+        ipv4_address: 172.22.0.100
+  replica:
+    container_name: replica
+    image: postgres:15.1
+    restart: always
+    volumes:
+      - ./db_volumes/primary-replica/replica:/var/lib/postgresql/data
+      - ./db_volumes/primary-replica/copy:/var/lib/postgresql/primary_copy
+    expose:
+      - 5432
+    env_file:
+      - ./primary-replica/db.env
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "fastapi_tutorial", "-d", "fastapi_tutorial"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      my_network:
+        ipv4_address: 172.22.0.101
+  backend:
+    build: ./backend/.
+    volumes:
+      - ./backend/:/usr/backend/
+    command: python3 run.py --prod
+    restart: always
+    ports:
+      - 8000:8003
+    depends_on:
+      primary:
+        condition: service_healthy
+      replica:
+        condition: service_healthy
+    networks:
+      my_network:
+        ipv4_address: 172.22.0.200
+networks:
+  my_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24
+          gateway: 172.22.0.1
