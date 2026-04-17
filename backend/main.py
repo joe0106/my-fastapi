@@ -11,7 +11,7 @@ if settings.run_mode == "ASYNC":
     from backend.api.users import router as user_router
     from backend.api.items import router as item_router
     from backend.api.auth import router as auth_router
-    from backend.database.generic import init_db , close_db
+    from backend.database.primary_replica import init_db , close_db
 
     app.include_router(infor_router)
     app.include_router(user_router)

@@ -40,7 +40,7 @@ services:
     build: ./backend/.
     volumes:
       - ./backend/:/usr/backend/
-    command: python3 run.py --prod
+    command: python3 run.py --primary-replica
     restart: always
     ports:
       - 8000:8003

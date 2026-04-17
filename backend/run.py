@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("--prod", action = "store_true", help = "Run the server in production mode")
     parser.add_argument("--test", action = "store_true", help = "Run the server in test mode")
     parser.add_argument("--dev",  action = "store_true", help = "Run the server in development mode")
+    parser.add_argument("--primary-replica",  action = "store_true", help = "Run the server in primary-replica mode")
 
     # 新增 db_type
     db_type =  parser.add_argument_group(title="Database Type", description="Run the server in different database type.")
@@ -26,6 +27,10 @@ if __name__ == "__main__":
     run_mode = parser.add_argument_group(title="Run Mode", description="Run the server in Async or Sync mode. Default is Async.")
     run_mode.add_argument("--sync", action="store_true", help="Run the server in Sync mode.")
 
+    # 新增主從資料庫設計
+    primary_replica = parser.add_argument_group(title="Primary Replica", description="Run the server in Primary Replica architecture.")
+    primary_replica.add_argument("--primary_replica", action="store_true", help="Run the server in Primary Replica architecture.")
+
     args = parser.parse_args()
 
     # 判斷環境
@@ -33,6 +38,8 @@ if __name__ == "__main__":
         load_dotenv(BASE_DIR / "setting" / ".env.prod")
     elif args.test:
         load_dotenv(BASE_DIR / "setting" / ".env.test")
+    elif args.primary_replica:
+        load_dotenv(BASE_DIR / "setting" / ".env.primary-replica")
     else:
         load_dotenv(BASE_DIR / "setting" / ".env.dev")
 

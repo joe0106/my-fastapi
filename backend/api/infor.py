@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from sqlalchemy import text
 
-from backend.database.generic import get_db
+from backend.database.primary_replica import get_read_db as get_db
 from backend.models.items import Item
 from backend.models.users import User
 from backend.setting.config import get_settings

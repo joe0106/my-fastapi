@@ -2,7 +2,7 @@ from sqlalchemy import select , update , delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.passwd import get_password_hash
-from backend.database.generic import crud_class_decorator
+from backend.database.injection import crud_class_decorator
 from backend.database.redis_cache import generic_cache_get, generic_cache_update, generic_cache_delete, generic_pagenation_cache_get
 from backend.models.users import User as UserModel 
 from backend.schemas import users as UserSchema
