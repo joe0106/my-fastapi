@@ -95,3 +95,16 @@ docker run --name fastapi_redis_dev -p 6379:6379 -d redis --requirepass "fastapi
 #使用redis-stack image除redis本體外，包含更多功能
 docker run --name fastapi_redis_dev -p 6379:6379 -d redis/redis-stack:latest
 ```
+
+# Docker compose - Primary-Replica mode
+
+```bash
+#use yaml file
+docker compose -f docker-compose-primary-replica.yml up -d
+docker compose -f docker-compose-primary-replica.yml down [service-name]
+docker compose -f docker-compose-primary-replica.yml restart [service-name]
+#check docker log when container is in detatch mode
+docker logs primary -f
+#進入容器的bash並執行命令
+docker exec -it primary bash -c "psql -U [user] -d [database]"
+```
