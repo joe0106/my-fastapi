@@ -5,24 +5,42 @@ build/
 dist/
 wheels/
 *.egg-info
-
-# Virtual environments
+.python-version
+.pytest_cache/
 .venv/
 
-# OS-specific files
+# OS/IDE
 **/.DS_Store
-
-# IDE-specific files
 .vscode/
 
-# ai agent files
+# AI agent files
 .opencode
 .github/
+# GEMINI.md
 
-# env files
-**/.env
-**/.env.*
+# Environment / Secret (Keep your keys safe!)
+**/*.env
+**/*.env.*
+!**/*.env.example
+primary-replica/db.env
 
-.pytest_cache/
+# Database Volumes
+# 排除所有數據目錄，但保留必要的設定檔
+db_volumes/mysql/
+db_volumes/postgresql/
+db_volumes/primary-replica/copy/
 
-.python-version
+# 針對 primary 與 replica：排除所有內容，但允許追蹤 .conf 檔案
+db_volumes/primary-replica/primary/*
+!db_volumes/primary-replica/primary/pg_hba.conf
+!db_volumes/primary-replica/primary/postgresql.conf
+db_volumes/primary-replica/replica/*
+
+# 額外確保排除任何資料庫自動產生的數據標記
+**/PG_VERSION
+**/postmaster.opts
+**/postmaster.pid
+**/postgresql.auto.conf
+**/base/
+**/global/
+**/pg_*/
