@@ -1,14 +1,25 @@
 import redis
 import pytest
+import os
 
-REDIS_URL = "redis://localhost:6379"
-CONNECTION_POOL = redis.ConnectionPool.from_url(REDIS_URL)
+redis_connection = None
+
+@pytest.fixture(autouse=True)
+def setup_redis(dependencies):
+    """自動初始化 Redis 連線"""
+    global redis_connection
+    # 使用 redis.from_url 建立連線
+    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+    redis_connection = redis.Redis.from_url(redis_url)
+
+    yield redis_connection
+
+    if redis_connection:
+        redis_connection.close()
 
 # 2 ways to connect redis
 @pytest.mark.redis_con_test
 def test_redis_connection():
-    redis_connection = redis.Redis.from_url(REDIS_URL)
-
     value = 'bar'
     redis_connection.set('foo', value)
     result = redis_connection.get('foo')
@@ -18,8 +29,6 @@ def test_redis_connection():
 
 @pytest.mark.redis_con_test
 def test_redis_connection_pool():
-    redis_connection = redis.Redis(connection_pool=CONNECTION_POOL)
-
     value = 'bar2'
     redis_connection.set('foo2', value)
     result = redis_connection.get('foo2')
