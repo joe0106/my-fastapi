@@ -36,6 +36,14 @@ services:
     networks:
       my_network:
         ipv4_address: 172.22.0.101
+  redis:
+    container_name: redis
+    image: redis/redis-stack:latest
+    expose:
+      - 6379
+    networks:
+      my_network:
+        ipv4_address: 172.22.0.50
   backend:
     build: ./backend/.
     volumes:
