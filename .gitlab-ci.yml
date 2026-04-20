@@ -1,0 +1,35 @@
+stages:
+  - build
+  - setup
+  - test
+  - teardown
+
+variables:
+  dc-file: "docker-compose-primary-replica.yml"
+
+docker-compose:
+  stage: build
+  script:
+    - docker compose -f $dc-file up -d
+
+primary-replica-setup:
+  stage: setup
+  needs:
+    - docker-compose
+  script: 
+    - chmod +x ./primary-replica/setup.sh
+    - ./primary-replica/setup.sh
+
+api-testing:
+  stage: test
+  needs:
+    - primary-replica-setup
+  script:
+    - docker exec -it backend bash -c "pytest ./tests/ --primary-replica"
+
+docker-compose-down:
+  stage: teardown
+  needs:
+    - api-testing
+  script:
+    - docker compose -f $dc $dc-file down
