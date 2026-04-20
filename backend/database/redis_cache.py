@@ -1,8 +1,19 @@
 import redis
+from functools import lru_cache 
+from backend.setting.config import get_settings
 
-REDIS_URL = "redis://localhost:6379"
+REDIS_POOL = None
 
-CONNECTION_POOL = redis.ConnectionPool.from_url(REDIS_URL)
+@lru_cache
+def check_redis_available():
+    settings = get_settings()
+    return bool(settings.redis_url)
+
+@lru_cache
+def get_redis_pool():
+    if check_redis_available:
+        from redis_pool import redis_pool
+        REDIS_POOL = redis_pool
 
 def check_has_all_key(result: dict, cls: object):
     '''
@@ -30,10 +41,13 @@ def generic_cache_get(prefix: str, key: str, cls: object):
     key: **parameter name** in caller function ( such as `user_id` 、`email` 、`item_id` )
     cls: **response schema** in caller function ( such as `UserSchema.UserRead` 、`UserSchema.UserId` 、`ItemSchema.ItemRead` )
     '''
-    rc = redis.Redis(connection_pool=CONNECTION_POOL)
 
     def inner(func):
         async def wrapper(*args, **kwargs):
+            if not REDIS_POOL:
+                return await func(*args, **kwargs)
+            rc = REDIS_POOL
+
             #未使用關鍵字參數就無法查詢cache，故呼叫原方法
             value_key = kwargs.get(key)
             if not value_key:
@@ -74,9 +88,13 @@ def merge_dict(d1: dict, d2: dict):
     return d1
 
 def generic_cache_update(prefix: str, key: str, update_with_page: bool = False, pagenation_key: str = None):
-    rc = redis.Redis(connection_pool=CONNECTION_POOL)
+    
     def inner(func):
         async def wrapper(*args, **kwargs):
+            if not REDIS_POOL:
+                return await func(*args, **kwargs)
+            rc = REDIS_POOL
+
             value_key = kwargs.get(key)
             if not value_key:
                 return await func(*args, **kwargs)
@@ -121,9 +139,13 @@ def generic_cache_update(prefix: str, key: str, update_with_page: bool = False, 
     return inner
 
 def generic_cache_delete(prefix: str, key: str):
-    rc = redis.Redis(connection_pool=CONNECTION_POOL)
+    
     def inner(func):
         async def wrapper(*args, **kwargs):
+            if not REDIS_POOL:
+                return await func(*args, **kwargs)
+            rc = REDIS_POOL
+
             value_key = kwargs.get(key)
             if not value_key:
                 return await func(*args, **kwargs)
@@ -146,9 +168,13 @@ def generic_cache_delete(prefix: str, key: str):
 
 import ast
 def generic_pagenation_cache_get(prefix: str, cls: object):
-    rc = redis.Redis(connection_pool=CONNECTION_POOL)
+    
     def inner(func):
         async def wrapper(*args, **kwargs):
+            if not REDIS_POOL:
+                return await func(*args, **kwargs)
+            rc = REDIS_POOL
+
             if kwargs.get('keyword'):
                 return await func(*args, **kwargs)
             
