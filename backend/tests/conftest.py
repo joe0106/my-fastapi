@@ -16,6 +16,7 @@ def pytest_addoption(parser):
     parser.addoption("--prod",action="store_true", help="Run the server in production mode.")
     parser.addoption("--test",action="store_true", help="Run the server in test mode.")
     parser.addoption("--dev",action="store_true", help="Run the server in development mode.")
+    parser.addoption("--primary-replica",action="store_true", help="Run the server in primary-replica mode.")
     parser.addoption("--sync",action="store_true", help="Run the server in Sync mode.")
     parser.addoption("--db", help="Run the server in database type.",choices=["mysql","postgresql"], default="postgresql")
 
@@ -31,6 +32,8 @@ async def dependencies(request):
         env_file = ".env.prod"
     elif args.getoption("test"):
         env_file = ".env.test"
+    elif args.getoption("primary_replica"):
+        env_file = ".env.primary-replica"
         
     env_path = project_root / "setting" / env_file
     load_dotenv(dotenv_path=env_path)
