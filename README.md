@@ -74,6 +74,8 @@ uv run pytest -m my_mark
 
 - 跑測試時，需要三種資料庫的容器運行
 
+- test
+
 # Docker build
 
 ```bash
