@@ -45,6 +45,7 @@ services:
       my_network:
         ipv4_address: 172.22.0.50
   backend:
+    container_name: backend
     build: ./backend/.
     volumes:
       - ./backend/:/usr/backend/
