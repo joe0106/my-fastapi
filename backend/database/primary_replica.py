@@ -1,7 +1,7 @@
 from random import random
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from setting.config import get_primary_replica_settings
+from backend.setting.config import get_primary_replica_settings
 from backend.models.base import Base
 
 settings = get_primary_replica_settings()
