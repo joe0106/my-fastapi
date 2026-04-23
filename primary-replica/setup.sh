@@ -1,79 +1,60 @@
 #!/bin/bash
+set -e
 
 # ==== Color ====
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-# Stop all containers before copy data
-echo -e "$GREEN Restart all containers$NC"
-docker restart primary replica 
-sleep 2
-
 echo -e "$GREEN Load environment variables$NC"
 source ./primary-replica/db.env
 user=$POSTGRES_USER
-pass="'$POSTGRES_PASSWORD'"
 db=$POSTGRES_DB
 repuser=$REPLICA_USER
-reppass="'$REPLICA_PASSWORD'"
+reppass=$REPLICA_PASSWORD
+export PGPASSWORD=$POSTGRES_PASSWORD
 
 echo -e "$GREEN Wait until primary is ready$NC"
-while ! docker exec -it primary bash -c "pg_isready -U $user -d $db"; do
-    echo -e "$RED Wait until primary is ready$NC"
+while ! docker exec primary pg_isready -U $user -d $db; do
     sleep 1
 done
 
-echo -e "$GREEN Wait until primary is ready$NC"
-while ! docker exec -it primary bash -c "pg_isready -U $user -d $db"; do
-    echo -e "$RED Wait until primary is ready$NC"
-    sleep 1
-done
+# Get actual PGDATA path from the running container
+REAL_PGDATA=$(docker exec primary psql -U $user -d $db -t -c "SHOW data_directory;" | tr -d '[:space:]')
+echo -e "$GREEN Primary PGDATA is located at: $REAL_PGDATA$NC"
 
-# Check dababase primary_db exist or not
-echo -e "$GREEN Check database $db exist or not$NC"
-docker exec -it primary bash -c "psql -U $user -d $db -c '\dt'"
-
-echo -e "$GREEN Check users exist or not$NC"
-docker exec -it primary bash -c "psql -U $user -d $db -c '\du'"
-
-# Check replication user exist or not
-echo -e "$GREEN Check replication user exist or not$NC"
-exist=$(docker exec -it primary bash -c "psql -U $user -d $db -c '\du'" | grep $repuser | cut -d' ' -f 2)
-
-# if does not exist, add replication user
-if [ "$exist" != "$repuser" ]; then
-    echo -e "$GREEN Add Replication User$NC"
-    docker exec -it primary bash -c "psql -U $user -d $db -c \"CREATE ROLE $repuser WITH LOGIN REPLICATION PASSWORD $reppass;\""
-    sleep 1
-else
-    echo -e "$GREEN Replication User exist$NC"
+# Check replication user
+echo -e "$GREEN Ensure replication user exists$NC"
+exist=$(docker exec primary psql -U $user -d $db -t -c "SELECT 1 FROM pg_roles WHERE rolname = '$repuser';" | tr -d '[:space:]')
+if [ "$exist" != "1" ]; then
+    docker exec primary psql -U $user -d $db -c "CREATE ROLE \"$repuser\" WITH LOGIN REPLICATION PASSWORD '$reppass';"
 fi
 
-# Allow replication connections from replica
-echo -e "$GREEN Allow replication connections from replica$NC"
-docker exec -it primary bash -c "echo 'host replication $repuser 172.22.0.101/32 md5' >> /var/lib/postgresql/data/pg_hba.conf"
-# Copy .postgresql.conf to /var/lib/postgresql/data/postgresql.conf
-docker cp ./primary-replica/postgresql.conf primary:/var/lib/postgresql/data/postgresql.conf
+# Configure primary
+echo -e "$GREEN Configuring Primary pg_hba.conf and postgresql.conf$NC"
+# Use a more reliable way to append to pg_hba.conf
+docker exec primary bash -c "echo \"host replication $repuser 172.22.0.101/32 scram-sha-256\" >> $REAL_PGDATA/pg_hba.conf"
+# Copy configuration file
+docker cp ./primary-replica/postgresql.conf primary:$REAL_PGDATA/postgresql.conf
 
-# Restart primary
-echo -e "$GREEN Restart primary$NC"
+echo -e "$GREEN Restarting Primary to apply changes$NC"
 docker restart primary
-sleep 1
+while ! docker exec primary pg_isready -U $user -d $db; do sleep 1; done
 
-# ==== Replica ====
-echo -e " Run$GREEN pg_basebackup$NC on$GREEN replica$NC"
-sleep 1
-docker exec -it replica bash -c "pg_basebackup -R -D /var/lib/postgresql/copy -Fp -Xs -v -P -h primary -p 5432 -U $repuser"
-sleep 1
+# ==== Replica Setup ====
+echo -e "$GREEN Initializing Replica with pg_basebackup...$NC"
+# Use docker compose to ensure correct network and volume context
+docker compose -f "$dc_file" stop replica
 
-# Stop all containers before copy data
-docker stop primary replica
+# Wipe replica data and run backup using a temporary container from the same image
+# We use the same PGDATA path for consistency
+docker compose -f "$dc_file" run --rm --no-deps \
+    -e PGPASSWORD="$reppass" \
+    replica \
+    bash -c "rm -rf /var/lib/postgresql/data/pgdata/* && \
+             pg_basebackup -h primary -p 5432 -U $repuser -D /var/lib/postgresql/data/pgdata -R -Xs -P && \
+             chown -R 999:999 /var/lib/postgresql/data/pgdata && \
+             chmod 700 /var/lib/postgresql/data/pgdata"
 
-echo -e "Remove old data from$RED replica$NC"
-rm -r ./db_volumes/primary-replica/replica/*
-echo -e "$GREEN Copy$NC data from primary to$GREEN replica$NC"
-cp -r ./db_volumes/primary-replica/copy/* ./db_volumes/primary-replica/replica/
-
-
-docker start primary replica
+echo -e "$GREEN Starting Replica$NC"
+docker compose -f "$dc_file" start replica
