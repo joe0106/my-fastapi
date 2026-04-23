@@ -52,9 +52,7 @@ docker compose -f "$dc_file" run --rm --no-deps \
     -e PGPASSWORD="$reppass" \
     replica \
     bash -c "rm -rf /var/lib/postgresql/data/pgdata/* && \
-             pg_basebackup -h primary -p 5432 -U $repuser -D /var/lib/postgresql/data/pgdata -R -Xs -P && \
-             chown -R 999:999 /var/lib/postgresql/data/pgdata && \
-             chmod 700 /var/lib/postgresql/data/pgdata"
+             pg_basebackup -h primary -p 5432 -U $repuser -D /var/lib/postgresql/data/pgdata -R -Xs -P"
 
 echo -e "$GREEN Starting Replica$NC"
 docker compose -f "$dc_file" start replica
