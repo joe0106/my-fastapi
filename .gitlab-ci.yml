@@ -5,31 +5,58 @@ stages:
   - teardown
 
 variables:
-  dc-file: "docker-compose-primary-replica.yml"
+  dc_file: "docker-compose-primary-replica-gitlab.yml"
+  env_file: "db.env"
+  env_file_path: "./primary-replica/"
+  CI_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
 docker-compose:
   stage: build
-  script:
-    - docker compose -f $dc-file up -d
+  image: docker:27.5.1@sha256:f649ef046008ca7f926a2571c32b0ac22e5c59eb61b959617f9acc2a4c638cf5
+  tags:
+    - ci
+  services:
+  - name: docker:27.5.1-dind@sha256:f649ef046008ca7f926a2571c32b0ac22e5c59eb61b959617f9acc2a4c638cf5
+    alias: dockerhost
+    variables:
+      HEALTHCHECK_TCP_PORT: "2375"
 
-primary-replica-setup:
-  stage: setup
-  needs:
-    - docker-compose
-  script: 
-    - chmod +x ./primary-replica/setup.sh
+  variables:
+    DOCKER_HOST: tcp://dockerhost:2375/
+    DOCKER_TLS_CERTDIR: ""
+    
+  before_script:
+    - apk update && apk add bash
+    - mkdir -p "$env_file_path"
+    - echo "POSTGRES_DB=$POSTGRES_DB" >> "$env_file_path$env_file"
+    - echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> "$env_file_path$env_file"
+    - echo "POSTGRES_USER=$POSTGRES_USER" >> "$env_file_path$env_file"
+    - echo "REPLICA_PASSWORD=$REPLICA_PASSWORD" >> "$env_file_path$env_file"
+    - echo "REPLICA_USER=$REPLICA_USER" >> "$env_file_path$env_file"
+
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+
+    - docker build 
+        --cache-from $CI_REGISTRY_IMAGE:latest
+        -t $CI_IMAGE
+        -t $CI_REGISTRY_IMAGE:latest
+        --build-arg BUILDKIT_INLINE_CACHE=1
+        ./backend/.
+
+    - docker push $CI_IMAGE
+    - docker push $CI_REGISTRY_IMAGE:latest
+
+  script:
+    - docker compose -f $dc_file down -v || true
+    - docker compose -f $dc_file up -d
+    - docker ps -a
+    
+    - export dc_file=$dc_file
+    - chmod +x ./primary-replica/setup.sh 
+    - chmod +x ./primary-replica/test.sh
     - ./primary-replica/setup.sh
-
-api-testing:
-  stage: test
-  needs:
-    - primary-replica-setup
-  script:
-    - docker exec -it backend bash -c "pytest ./tests/ --primary-replica"
-
-docker-compose-down:
-  stage: teardown
-  needs:
-    - api-testing
-  script:
-    - docker compose -f $dc $dc-file down
+    - ./primary-replica/test.sh
+  after_script:
+    - docker compose -f $dc_file down -v
